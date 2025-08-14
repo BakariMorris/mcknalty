@@ -254,6 +254,7 @@ body {
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: 1px solid #333;
+    cursor: pointer;
 }
 
 .video-card:hover {
@@ -300,6 +301,9 @@ body {
     color: white;
     font-size: 1.5rem;
     transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+    outline: none;
 }
 
 .play-button:hover {
@@ -554,6 +558,30 @@ body {
 }
 
 /* Responsive Design */
+@media screen and (max-width: 1200px) and (min-width: 769px) {
+    .nav-menu {
+        gap: 1.2rem;
+    }
+    
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .nav-container {
+        padding: 0 15px;
+        justify-content: space-between;
+    }
+    
+    .nav-logo h2 {
+        font-size: 1.6rem;
+    }
+    
+    .nav-logo .subtitle {
+        font-size: 0.8rem;
+    }
+}
+
 @media screen and (max-width: 768px) {
     .hamburger {
         display: flex;
@@ -603,6 +631,13 @@ body {
     .videos-grid {
         grid-template-columns: 1fr;
     }
+    
+    .video-thumbnail {
+        height: 250px;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+    }
 
     .guides-grid {
         grid-template-columns: 1fr;
@@ -650,6 +685,13 @@ body {
     .section-title {
         font-size: 2rem;
         letter-spacing: -0.01em;
+    }
+    
+    .video-thumbnail {
+        height: 220px;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
     }
 
     .community-stats {

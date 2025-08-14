@@ -37,18 +37,37 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// Video card click handlers
-document.querySelectorAll('.video-card').forEach(card => {
-    card.addEventListener('click', () => {
-        const videoUrl = card.getAttribute('data-video-url');
-        if (videoUrl && videoUrl.trim() !== '') {
-            window.open(videoUrl, '_blank');
-        } else {
-            // Fallback to channel page if no specific video URL
-            window.open('https://www.youtube.com/@Mcknalty', '_blank');
-        }
+// Video card click handlers - Initialize after DOM loads
+function initVideoClickHandlers() {
+    document.querySelectorAll('.video-card').forEach(card => {
+        // Remove any existing click listeners
+        card.replaceWith(card.cloneNode(true));
     });
-});
+    
+    // Add fresh click listeners
+    document.querySelectorAll('.video-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const videoUrl = card.getAttribute('data-video-url');
+            if (videoUrl && videoUrl.trim() !== '') {
+                window.open(videoUrl, '_blank');
+            } else {
+                // Fallback to channel page if no specific video URL
+                window.open('https://www.youtube.com/@Mcknalty', '_blank');
+            }
+        });
+        
+        // Add hover effects
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-10px)';
+            card.style.boxShadow = '0 20px 40px rgba(213, 0, 0, 0.3)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 20px 40px rgba(213, 0, 0, 0.2)';
+        });
+    });
+}
 
 // Guide card interactions
 document.querySelectorAll('.guide-card').forEach(card => {
@@ -238,16 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Add loading state for video thumbnails
-document.querySelectorAll('.video-thumbnail').forEach(thumbnail => {
-    thumbnail.addEventListener('click', () => {
-        const playButton = thumbnail.querySelector('.play-button');
-        playButton.innerHTML = '⏳';
-        setTimeout(() => {
-            playButton.innerHTML = '▶';
-            window.open('https://www.youtube.com/@Mcknalty', '_blank');
-        }, 500);
-    });
+// Initialize video click handlers after page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize video navigation after video updater runs
+    setTimeout(() => {
+        initVideoClickHandlers();
+    }, 100);
 });
 
 // Dynamic year in footer
