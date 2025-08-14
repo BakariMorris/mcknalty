@@ -232,8 +232,11 @@
         let gamePaused = false;
         let gameTimer;
         let targetSpawnTimer;
-        let mouseX = 0, mouseY = 0;
         let isPointerLocked = false;
+        
+        // Camera control variables
+        let yaw = 0;   // Horizontal rotation
+        let pitch = 0; // Vertical rotation
 
         // Three.js setup
         function initGame() {
@@ -245,7 +248,10 @@
             
             // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, 5);
+            camera.position.set(0, 2, 0); // Position on ground level, 2 units high (eye level)
+            
+            // Initialize camera rotation
+            updateCameraRotation();
             
             // Renderer setup
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -262,8 +268,8 @@
             directionalLight.castShadow = true;
             scene.add(directionalLight);
             
-            // Add starfield background
-            createStarField();
+            // Add Tron grid background
+            createTronGrid();
             
             // Mouse controls
             canvas.addEventListener('click', onCanvasClick);
@@ -302,13 +308,25 @@
             const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
             const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
             
-            // Update camera rotation based on mouse movement
+            // Update yaw and pitch with mouse movement
             const sensitivity = 0.002;
-            camera.rotation.y -= movementX * sensitivity;
-            camera.rotation.x -= movementY * sensitivity;
+            yaw -= movementX * sensitivity;
+            pitch -= movementY * sensitivity;
             
-            // Limit vertical rotation
-            camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+            // Clamp pitch to prevent flipping
+            pitch = Math.max(-Math.PI * 0.45, Math.min(Math.PI * 0.45, pitch));
+            
+            // Apply rotation using quaternions to avoid gimbal lock
+            updateCameraRotation();
+        }
+        
+        function updateCameraRotation() {
+            // Create quaternions for yaw (Y-axis) and pitch (X-axis)
+            const yawQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+            const pitchQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+            
+            // Combine rotations: yaw first, then pitch
+            camera.quaternion.copy(yawQuaternion).multiply(pitchQuaternion);
         }
 
         function onPointerLockChange() {
@@ -324,23 +342,143 @@
             console.log('Pointer lock failed');
         }
 
-        function createStarField() {
-            const starGeometry = new THREE.BufferGeometry();
-            const starVertices = [];
+        function createTronGrid() {
+            const gridGroup = new THREE.Group();
+            const gridColor = 0x00ffff; // Cyan color for Tron effect
+            const cubeSize = 50; // Size of the cube room
+            const gridStep = 2.5; // Grid spacing
             
-            for (let i = 0; i < 1000; i++) {
-                starVertices.push(
-                    (Math.random() - 0.5) * 2000,
-                    (Math.random() - 0.5) * 2000,
-                    (Math.random() - 0.5) * 2000
+            // Create all grid lines for a complete cube
+            const allGeometry = new THREE.BufferGeometry();
+            const allVertices = [];
+            
+            // Floor grid (XZ plane at Y = 0)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // X direction lines on floor
+                allVertices.push(-cubeSize, 0, i);
+                allVertices.push(cubeSize, 0, i);
+                // Z direction lines on floor
+                allVertices.push(i, 0, -cubeSize);
+                allVertices.push(i, 0, cubeSize);
+            }
+            
+            // Ceiling grid (XZ plane at Y = cubeSize)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // X direction lines on ceiling
+                allVertices.push(-cubeSize, cubeSize, i);
+                allVertices.push(cubeSize, cubeSize, i);
+                // Z direction lines on ceiling
+                allVertices.push(i, cubeSize, -cubeSize);
+                allVertices.push(i, cubeSize, cubeSize);
+            }
+            
+            // Front wall (XY plane at Z = cubeSize)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // X direction lines on front wall
+                allVertices.push(-cubeSize, i, cubeSize);
+                allVertices.push(cubeSize, i, cubeSize);
+                // Y direction lines on front wall
+                allVertices.push(i, -cubeSize, cubeSize);
+                allVertices.push(i, cubeSize, cubeSize);
+            }
+            
+            // Back wall (XY plane at Z = -cubeSize)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // X direction lines on back wall
+                allVertices.push(-cubeSize, i, -cubeSize);
+                allVertices.push(cubeSize, i, -cubeSize);
+                // Y direction lines on back wall
+                allVertices.push(i, -cubeSize, -cubeSize);
+                allVertices.push(i, cubeSize, -cubeSize);
+            }
+            
+            // Left wall (YZ plane at X = -cubeSize)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // Y direction lines on left wall
+                allVertices.push(-cubeSize, i, -cubeSize);
+                allVertices.push(-cubeSize, i, cubeSize);
+                // Z direction lines on left wall
+                allVertices.push(-cubeSize, -cubeSize, i);
+                allVertices.push(-cubeSize, cubeSize, i);
+            }
+            
+            // Right wall (YZ plane at X = cubeSize)
+            for (let i = -cubeSize; i <= cubeSize; i += gridStep) {
+                // Y direction lines on right wall
+                allVertices.push(cubeSize, i, -cubeSize);
+                allVertices.push(cubeSize, i, cubeSize);
+                // Z direction lines on right wall
+                allVertices.push(cubeSize, -cubeSize, i);
+                allVertices.push(cubeSize, cubeSize, i);
+            }
+            
+            allGeometry.setAttribute('position', new THREE.Float32BufferAttribute(allVertices, 3));
+            const gridMaterial = new THREE.LineBasicMaterial({ 
+                color: gridColor, 
+                transparent: true, 
+                opacity: 0.2,
+                linewidth: 1
+            });
+            const gridLines = new THREE.LineSegments(allGeometry, gridMaterial);
+            gridGroup.add(gridLines);
+            
+            // Add accent lines at major intervals for better visual structure
+            const accentGeometry = new THREE.BufferGeometry();
+            const accentVertices = [];
+            const accentStep = 10;
+            
+            // Major grid lines every 10 units
+            for (let i = -cubeSize; i <= cubeSize; i += accentStep) {
+                // Floor accents
+                allVertices.push(-cubeSize, 0, i);
+                allVertices.push(cubeSize, 0, i);
+                allVertices.push(i, 0, -cubeSize);
+                allVertices.push(i, 0, cubeSize);
+                
+                // Vertical accents (corners and major divisions)
+                allVertices.push(i, 0, -cubeSize);
+                allVertices.push(i, cubeSize, -cubeSize);
+                allVertices.push(i, 0, cubeSize);
+                allVertices.push(i, cubeSize, cubeSize);
+                allVertices.push(-cubeSize, 0, i);
+                allVertices.push(-cubeSize, cubeSize, i);
+                allVertices.push(cubeSize, 0, i);
+                allVertices.push(cubeSize, cubeSize, i);
+            }
+            
+            accentGeometry.setAttribute('position', new THREE.Float32BufferAttribute(accentVertices, 3));
+            const accentMaterial = new THREE.LineBasicMaterial({ 
+                color: 0x00ffff, 
+                transparent: true, 
+                opacity: 0.6,
+                linewidth: 2
+            });
+            const accentLines = new THREE.LineSegments(accentGeometry, accentMaterial);
+            gridGroup.add(accentLines);
+            
+            // Add some floating particles for atmosphere
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleVertices = [];
+            
+            for (let i = 0; i < 30; i++) {
+                particleVertices.push(
+                    (Math.random() - 0.5) * 80,
+                    Math.random() * 40 + 5, // Keep particles above ground
+                    (Math.random() - 0.5) * 80
                 );
             }
             
-            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(particleVertices, 3));
+            const particleMaterial = new THREE.PointsMaterial({ 
+                color: 0x00ffff, 
+                size: 2,
+                transparent: true,
+                opacity: 0.4
+            });
+            const particles = new THREE.Points(particleGeometry, particleMaterial);
+            gridGroup.add(particles);
             
-            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 });
-            const stars = new THREE.Points(starGeometry, starMaterial);
-            scene.add(stars);
+            scene.add(gridGroup);
         }
 
         function createTarget() {
@@ -366,11 +504,13 @@
             targetGroup.add(target);
             targetGroup.add(glow);
             
-            // Random position
+            // Random position within the cube room (with safety margin from walls)
+            const safetyMargin = 5;
+            const maxPos = 50 - safetyMargin; // 45 units from center
             targetGroup.position.set(
-                (Math.random() - 0.5) * 20,
-                (Math.random() - 0.5) * 15,
-                (Math.random() - 0.5) * 10 - 5
+                (Math.random() - 0.5) * (maxPos * 2), // X: -45 to 45
+                Math.random() * (maxPos - 5) + 5,     // Y: 5 to 40 (above ground, below ceiling)
+                (Math.random() - 0.5) * (maxPos * 2)  // Z: -45 to 45
             );
             
             // Random movement
@@ -502,10 +642,11 @@
                     targets.splice(index, 1);
                 }
                 
-                // Bounce off invisible boundaries
-                if (Math.abs(target.position.x) > 10) target.velocity.x *= -1;
-                if (Math.abs(target.position.y) > 8) target.velocity.y *= -1;
-                if (target.position.z > 2 || target.position.z < -15) target.velocity.z *= -1;
+                // Bounce off cube walls (with safety margin)
+                const wallBoundary = 45;
+                if (Math.abs(target.position.x) > wallBoundary) target.velocity.x *= -1;
+                if (target.position.y > wallBoundary || target.position.y < 3) target.velocity.y *= -1;
+                if (Math.abs(target.position.z) > wallBoundary) target.velocity.z *= -1;
             });
         }
 
@@ -529,6 +670,11 @@
             
             updateUI();
             
+            // Spawn initial targets
+            for (let i = 0; i < 10; i++) {
+                createTarget();
+            }
+            
             // Start timers
             gameTimer = setInterval(() => {
                 if (!gamePaused) {
@@ -543,9 +689,13 @@
             
             targetSpawnTimer = setInterval(() => {
                 if (!gamePaused && gameRunning) {
-                    createTarget();
+                    // Spawn multiple targets at once
+                    const targetsToSpawn = Math.floor(Math.random() * 3) + 2; // 2-4 targets per spawn
+                    for (let i = 0; i < targetsToSpawn; i++) {
+                        createTarget();
+                    }
                 }
-            }, 1000 + Math.random() * 1000);
+            }, 200 + Math.random() * 300); // Much faster spawn rate: 200-500ms
         }
 
         function endGame() {
