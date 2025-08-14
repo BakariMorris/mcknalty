@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim Trainer - Mcknalty Marvel Rivals Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        .aim-trainer-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: none;
+        }
+        
+        .crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+        }
+        
+        .crosshair::before {
+            top: 50%;
+            left: 8px;
+            right: 8px;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+        
+        .crosshair::after {
+            left: 50%;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+        
+        .game-ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .ui-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            backdrop-filter: blur(10px);
+        }
+        
+        .score-panel h3,
+        .stats-panel h3 {
+            margin: 0 0 10px 0;
+            color: #ff4444;
+            font-size: 18px;
+        }
+        
+        .score-value,
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
+        
+        .control-button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-button:hover {
+            background: #ff6666;
+            transform: translateY(-2px);
+        }
+        
+        .back-nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+            pointer-events: auto;
+        }
+        
+        .back-button {
+            background: rgba(0, 0, 0, 0.8);
+            color: #ff4444;
+            border: 2px solid #ff4444;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .back-button:hover {
+            background: #ff4444;
+            color: white;
+        }
+        
+        .start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            font-family: 'Space Grotesk', sans-serif;
+            color: white;
+        }
+        
+        .start-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #ff4444;
+        }
+        
+        .start-screen p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="back-nav">
+        <a href="index.html" class="back-button">← Back to Hub</a>
+    </div>
+
+    <div class="start-screen" id="startScreen">
+        <h1>🎯 AIM TRAINER</h1>
+        <p>Test your aim and reflexes! Shoot the floating targets to score points. The more accurate and faster you are, the higher your score!</p>
+        <button class="control-button" onclick="startGame()">START TRAINING</button>
+        <div style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">
+            <p>Controls: Click canvas to enable mouse look, then move mouse to aim and click to shoot</p>
+            <p>Press ESC to unlock mouse cursor</p>
+        </div>
+    </div>
+
+    <div class="aim-trainer-container">
+        <canvas id="gameCanvas" class="game-canvas"></canvas>
+        <div class="crosshair" id="crosshair"></div>
+        
+        <div class="game-ui">
+            <div class="ui-panel score-panel">
+                <h3>SCORE</h3>
+                <div class="score-value" id="scoreValue">0</div>
+            </div>
+            
+            <div class="ui-panel stats-panel">
+                <h3>STATS</h3>
+                <div>Targets Hit: <span class="stat-value" id="targetsHit">0</span></div>
+                <div>Shots Fired: <span class="stat-value" id="shotsFired">0</span></div>
+                <div>Accuracy: <span class="stat-value" id="accuracy">0%</span></div>
+                <div>Time: <span class="stat-value" id="timeLeft">60s</span></div>
+            </div>
+            
+            <div class="controls-panel">
+                <button class="control-button" onclick="restartGame()">Restart</button>
+                <button class="control-button" onclick="pauseGame()" id="pauseBtn">Pause</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Game variables
+        let scene, camera, renderer, targets = [];
+        let score = 0, targetsHit = 0, shotsFired = 0;
+        let gameTime = 60;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameTimer;
+        let targetSpawnTimer;
+        let mouseX = 0, mouseY = 0;
+        let isPointerLocked = false;
+
+        // Three.js setup
+        function initGame() {
+            const canvas = document.getElementById('gameCanvas');
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 5);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Add starfield background
+            createStarField();
+            
+            // Mouse controls
+            canvas.addEventListener('click', onCanvasClick);
+            canvas.addEventListener('mousemove', onMouseMove);
+            
+            // Pointer lock events
+            document.addEventListener('pointerlockchange', onPointerLockChange);
+            document.addEventListener('pointerlockerror', onPointerLockError);
+            
+            // Resize handler
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start render loop
+            animate();
+        }
+
+        function onCanvasClick(event) {
+            const canvas = document.getElementById('gameCanvas');
+            
+            // Request pointer lock on first click
+            if (!isPointerLocked) {
+                canvas.requestPointerLock();
+                return;
+            }
+            
+            // Shoot if game is running
+            if (gameRunning && !gamePaused) {
+                shoot();
+            }
+        }
+
+        function onMouseMove(event) {
+            if (!isPointerLocked || !gameRunning || gamePaused) return;
+            
+            // Get mouse movement deltas
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+            
+            // Update camera rotation based on mouse movement
+            const sensitivity = 0.002;
+            camera.rotation.y -= movementX * sensitivity;
+            camera.rotation.x -= movementY * sensitivity;
+            
+            // Limit vertical rotation
+            camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+        }
+
+        function onPointerLockChange() {
+            const canvas = document.getElementById('gameCanvas');
+            isPointerLocked = document.pointerLockElement === canvas;
+            
+            if (isPointerLocked) {
+                console.log('Pointer locked - you can now look around and shoot!');
+            }
+        }
+
+        function onPointerLockError() {
+            console.log('Pointer lock failed');
+        }
+
+        function createStarField() {
+            const starGeometry = new THREE.BufferGeometry();
+            const starVertices = [];
+            
+            for (let i = 0; i < 1000; i++) {
+                starVertices.push(
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000
+                );
+            }
+            
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 2 });
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+        }
+
+        function createTarget() {
+            const targetGroup = new THREE.Group();
+            
+            // Main target sphere
+            const geometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const material = new THREE.MeshLambertMaterial({ 
+                color: Math.random() > 0.8 ? 0xff4444 : 0x44ff44 // Occasional red targets worth more
+            });
+            const target = new THREE.Mesh(geometry, material);
+            target.castShadow = true;
+            
+            // Glowing effect
+            const glowGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: material.color,
+                transparent: true,
+                opacity: 0.3
+            });
+            const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            
+            targetGroup.add(target);
+            targetGroup.add(glow);
+            
+            // Random position
+            targetGroup.position.set(
+                (Math.random() - 0.5) * 20,
+                (Math.random() - 0.5) * 15,
+                (Math.random() - 0.5) * 10 - 5
+            );
+            
+            // Random movement
+            targetGroup.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.02,
+                (Math.random() - 0.5) * 0.01
+            );
+            
+            // Store target data
+            targetGroup.userData = {
+                isRed: material.color.getHex() === 0xff4444,
+                created: Date.now()
+            };
+            
+            scene.add(targetGroup);
+            targets.push(targetGroup);
+        }
+
+        function shoot() {
+            if (!gameRunning || gamePaused) return;
+            
+            shotsFired++;
+            updateUI();
+            
+            // Create muzzle flash effect
+            createMuzzleFlash();
+            
+            // Raycasting for target detection from center of screen (where crosshair is)
+            const raycaster = new THREE.Raycaster();
+            const direction = new THREE.Vector3(0, 0, -1);
+            direction.applyQuaternion(camera.quaternion);
+            raycaster.set(camera.position, direction);
+            
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            for (let intersect of intersects) {
+                let targetGroup = intersect.object.parent;
+                if (targetGroup && targets.includes(targetGroup)) {
+                    // Hit target!
+                    targetsHit++;
+                    
+                    // Score calculation
+                    const timeSinceCreated = Date.now() - targetGroup.userData.created;
+                    let points = Math.max(100 - Math.floor(timeSinceCreated / 100), 10);
+                    
+                    if (targetGroup.userData.isRed) {
+                        points *= 2; // Red targets worth double
+                    }
+                    
+                    score += points;
+                    
+                    // Remove target
+                    scene.remove(targetGroup);
+                    targets.splice(targets.indexOf(targetGroup), 1);
+                    
+                    // Create hit effect
+                    createHitEffect(targetGroup.position);
+                    
+                    updateUI();
+                    break;
+                }
+            }
+        }
+
+        function createMuzzleFlash() {
+            const flash = document.createElement('div');
+            flash.style.position = 'fixed';
+            flash.style.top = '50%';
+            flash.style.left = '50%';
+            flash.style.transform = 'translate(-50%, -50%)';
+            flash.style.width = '10px';
+            flash.style.height = '10px';
+            flash.style.background = '#ffff00';
+            flash.style.borderRadius = '50%';
+            flash.style.boxShadow = '0 0 20px #ffff00';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '150';
+            document.body.appendChild(flash);
+            
+            setTimeout(() => {
+                document.body.removeChild(flash);
+            }, 100);
+        }
+
+        function createHitEffect(position) {
+            const particles = new THREE.Group();
+            
+            for (let i = 0; i < 20; i++) {
+                const geometry = new THREE.SphereGeometry(0.02, 4, 4);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: Math.random() > 0.5 ? 0xff4444 : 0xffff44 
+                });
+                const particle = new THREE.Mesh(geometry, material);
+                
+                particle.position.copy(position);
+                particle.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2
+                );
+                
+                particles.add(particle);
+            }
+            
+            scene.add(particles);
+            
+            // Remove particles after animation
+            setTimeout(() => {
+                scene.remove(particles);
+            }, 1000);
+        }
+
+        function updateTargets() {
+            if (!gameRunning || gamePaused) return;
+            
+            targets.forEach((target, index) => {
+                // Move target
+                target.position.add(target.velocity);
+                
+                // Rotate for visual effect
+                target.rotation.x += 0.01;
+                target.rotation.y += 0.01;
+                
+                // Remove targets that are too old or off screen
+                const age = Date.now() - target.userData.created;
+                if (age > 8000 || target.position.length() > 30) {
+                    scene.remove(target);
+                    targets.splice(index, 1);
+                }
+                
+                // Bounce off invisible boundaries
+                if (Math.abs(target.position.x) > 10) target.velocity.x *= -1;
+                if (Math.abs(target.position.y) > 8) target.velocity.y *= -1;
+                if (target.position.z > 2 || target.position.z < -15) target.velocity.z *= -1;
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            updateTargets();
+            renderer.render(scene, camera);
+        }
+
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameRunning = true;
+            gamePaused = false;
+            
+            // Reset game state
+            score = 0;
+            targetsHit = 0;
+            shotsFired = 0;
+            gameTime = 60;
+            
+            updateUI();
+            
+            // Start timers
+            gameTimer = setInterval(() => {
+                if (!gamePaused) {
+                    gameTime--;
+                    updateUI();
+                    
+                    if (gameTime <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+            
+            targetSpawnTimer = setInterval(() => {
+                if (!gamePaused && gameRunning) {
+                    createTarget();
+                }
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameTimer);
+            clearInterval(targetSpawnTimer);
+            
+            alert(`Game Over!\nFinal Score: ${score}\nTargets Hit: ${targetsHit}\nAccuracy: ${shotsFired > 0 ? Math.round((targetsHit / shotsFired) * 100) : 0}%`);
+            
+            document.getElementById('startScreen').style.display = 'flex';
+        }
+
+        function restartGame() {
+            endGame();
+            
+            // Clear all targets
+            targets.forEach(target => scene.remove(target));
+            targets = [];
+        }
+
+        function pauseGame() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            document.getElementById('pauseBtn').textContent = gamePaused ? 'Resume' : 'Pause';
+        }
+
+        function updateUI() {
+            document.getElementById('scoreValue').textContent = score;
+            document.getElementById('targetsHit').textContent = targetsHit;
+            document.getElementById('shotsFired').textContent = shotsFired;
+            document.getElementById('accuracy').textContent = shotsFired > 0 ? Math.round((targetsHit / shotsFired) * 100) + '%' : '0%';
+            document.getElementById('timeLeft').textContent = gameTime + 's';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
