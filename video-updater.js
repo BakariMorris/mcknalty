@@ -6,42 +6,42 @@ const latestVideos = [
     {
         id: "VIDEO_ID_1",
         title: "I Spent 7 DAYS Learning Captain America To PROVE He's UNDERRATED In Marvel Rivals",
-        description: "Video description or snippet",
+        description: "Watch Mcknalty's epic 7-day journey mastering Captain America's shield mechanics, team synergies, and game-changing strategies that prove why Cap deserves S-tier respect!",
         uploadDate: "3 days ago",
         thumbnail: "video_thumbnails/video_1.avif"
     },
     {
         id: "VIDEO_ID_2", 
         title: "I Spent a 100 HOURS Learning Venom To PROVE He's ACTUALLY INSANE In Marvel Rivals",
-        description: "Video description or snippet",
+        description: "Discover the symbiote's true potential! 100 hours of grinding revealed Venom's devastating combos, positioning secrets, and why he's the most underestimated tank in Marvel Rivals.",
         uploadDate: "1 week ago",
         thumbnail: "video_thumbnails/video_2.avif"
     },
     {
         id: "VIDEO_ID_3",
         title: "I Spent a 100 HOURS Learning Storm To PROVE She's THE BEST DPS In Marvel Rivals", 
-        description: "Video description or snippet",
+        description: "Harness the power of weather warfare! Storm's lightning combos, flight mechanics, and area control abilities make her the ultimate DPS carry. Master the tempest within!",
         uploadDate: "2 weeks ago",
         thumbnail: "video_thumbnails/video_3.avif"
     },
     {
         id: "VIDEO_ID_4",
         title: "I Spent a 100 HOURS Learning Ultron To PROVE He can carry In Marvel Rivals",
-        description: "Video description or snippet", 
+        description: "The age of Ultron is here! Learn advanced AI positioning, drone swarm tactics, and team fight domination strategies that make this robot an unstoppable force.", 
         uploadDate: "3 weeks ago",
         thumbnail: "video_thumbnails/video_4.avif"
     },
     {
         id: "VIDEO_ID_5",
         title: "WHAT!?!? Marvel Rivals Fighting Game?!?! (Marvel Tokon Fighting Souls Trailer REACTION)",
-        description: "Video description or snippet", 
+        description: "Mind-blowing news! Dive into the shocking reveal of Marvel's new fighting game. Mcknalty breaks down the trailer, characters, and what this means for Marvel gaming!", 
         uploadDate: "3 weeks ago",
         thumbnail: "video_thumbnails/video_5.avif"
     },
     {
         id: "VIDEO_ID_6",
-        title: "I Spent a 100 HOURS Learning Black Panther To PROVE He’s BROKEN In Marvel Rivals",
-        description: "Video description or snippet", 
+        title: "I Spent a 100 HOURS Learning Black Panther To PROVE He's BROKEN In Marvel Rivals",
+        description: "Wakanda forever! Unlock Black Panther's stealth assassination techniques, vibranium shield combos, and jungle warfare tactics that dominate every battlefield.", 
         uploadDate: "3 weeks ago",
         thumbnail: "video_thumbnails/video_6.avif"
     }
